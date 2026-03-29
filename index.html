@@ -1,0 +1,669 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="version" content="20260329-fortaleza-v1">
+  <title>🌴 Fortaleza · 婚礼之旅</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;700&family=Noto+Sans+SC:wght@400;500;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: 'Poppins', 'Noto Sans SC', sans-serif;
+      background: linear-gradient(160deg, #fff8f0 0%, #e0f7fa 100%);
+      min-height: 100vh;
+      color: #2d3748;
+    }
+
+    /* ─── HEADER ─── */
+    .header {
+      background: linear-gradient(135deg, #01579b 0%, #ff7043 100%);
+      color: #fff;
+      padding: 32px 20px 28px;
+      text-align: center;
+      position: relative;
+      overflow: hidden;
+    }
+    .header::before {
+      content: '';
+      position: absolute;
+      top: -40px; right: -40px;
+      width: 160px; height: 160px;
+      background: rgba(255,255,255,0.08);
+      border-radius: 50%;
+    }
+    .header::after {
+      content: '';
+      position: absolute;
+      bottom: -60px; left: -30px;
+      width: 200px; height: 200px;
+      background: rgba(255,255,255,0.05);
+      border-radius: 50%;
+    }
+    .header h1 {
+      font-size: 2.4rem;
+      font-weight: 700;
+      letter-spacing: 2px;
+      margin-bottom: 4px;
+    }
+    .header .subtitle {
+      font-size: 1rem;
+      font-weight: 400;
+      opacity: 0.92;
+      margin-bottom: 6px;
+    }
+    .header .date-badge {
+      display: inline-block;
+      background: rgba(255,255,255,0.2);
+      border: 1px solid rgba(255,255,255,0.4);
+      border-radius: 20px;
+      padding: 4px 16px;
+      font-size: 0.88rem;
+      font-weight: 600;
+      margin-bottom: 6px;
+    }
+    .header .hotel-note {
+      font-size: 0.78rem;
+      opacity: 0.8;
+      letter-spacing: 0.5px;
+    }
+
+    /* ─── MAIN CONTAINER ─── */
+    .container {
+      max-width: 860px;
+      margin: 0 auto;
+      padding: 24px 16px 48px;
+    }
+
+    /* ─── SECTION TITLE ─── */
+    .section-title {
+      font-size: 1.05rem;
+      font-weight: 700;
+      color: #01579b;
+      margin-bottom: 16px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    /* ─── CARD ─── */
+    .card {
+      background: #fff;
+      border-radius: 16px;
+      box-shadow: 0 4px 20px rgba(0,0,0,0.08);
+      padding: 20px;
+      margin-bottom: 24px;
+    }
+
+    /* ─── CREW SECTION ─── */
+    .crew-grid {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 12px;
+      justify-content: center;
+    }
+    .crew-card {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 8px;
+      min-width: 100px;
+      flex: 1 1 100px;
+      max-width: 130px;
+    }
+    .avatar {
+      width: 60px;
+      height: 60px;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 1.5rem;
+      font-weight: 700;
+      color: #fff;
+      box-shadow: 0 3px 10px rgba(0,0,0,0.15);
+      flex-shrink: 0;
+    }
+    .crew-name {
+      font-size: 0.82rem;
+      font-weight: 600;
+      color: #444;
+      text-align: center;
+    }
+    .status-wrap {
+      width: 100%;
+      text-align: center;
+    }
+    .status-text {
+      font-size: 0.75rem;
+      color: #666;
+      cursor: pointer;
+      padding: 3px 6px;
+      border-radius: 6px;
+      transition: background 0.2s;
+      display: inline-block;
+      max-width: 120px;
+      word-break: break-word;
+      line-height: 1.4;
+    }
+    .status-text:hover {
+      background: #f0f9ff;
+      color: #00bcd4;
+    }
+    .status-input {
+      font-size: 0.75rem;
+      color: #333;
+      border: 1.5px solid #00bcd4;
+      border-radius: 6px;
+      padding: 3px 6px;
+      width: 100%;
+      max-width: 120px;
+      text-align: center;
+      outline: none;
+      background: #f0fdff;
+      font-family: inherit;
+    }
+
+    /* ─── MAP SECTION ─── */
+    #map {
+      height: 350px;
+      border-radius: 16px;
+      overflow: hidden;
+      z-index: 0;
+    }
+
+    /* ─── TABS ─── */
+    .tabs {
+      display: flex;
+      gap: 8px;
+      margin-bottom: 0;
+      flex-wrap: wrap;
+    }
+    .tab-btn {
+      flex: 1;
+      min-width: 120px;
+      padding: 10px 8px;
+      border: none;
+      border-radius: 12px 12px 0 0;
+      background: #e8f4f8;
+      color: #555;
+      font-size: 0.82rem;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.2s;
+      font-family: inherit;
+      line-height: 1.4;
+    }
+    .tab-btn:hover {
+      background: #ffd0be;
+      color: #ff7043;
+    }
+    .tab-btn.active {
+      background: #ff7043;
+      color: #fff;
+      box-shadow: 0 -3px 10px rgba(255,112,67,0.2);
+    }
+    .tab-content {
+      display: none;
+      background: #fff;
+      border-radius: 0 16px 16px 16px;
+      box-shadow: 0 4px 20px rgba(0,0,0,0.08);
+      padding: 24px 20px;
+    }
+    .tab-content.active {
+      display: block;
+    }
+
+    /* ─── TIMELINE ─── */
+    .timeline {
+      position: relative;
+      padding-left: 32px;
+    }
+    .timeline::before {
+      content: '';
+      position: absolute;
+      left: 10px;
+      top: 8px;
+      bottom: 8px;
+      width: 2px;
+      background: linear-gradient(to bottom, #00bcd4, #ff7043);
+      border-radius: 2px;
+    }
+    .tl-item {
+      position: relative;
+      margin-bottom: 20px;
+    }
+    .tl-item:last-child {
+      margin-bottom: 0;
+    }
+    .tl-dot {
+      position: absolute;
+      left: -26px;
+      top: 3px;
+      width: 12px;
+      height: 12px;
+      border-radius: 50%;
+      background: #00bcd4;
+      border: 2px solid #fff;
+      box-shadow: 0 0 0 2px #00bcd4;
+    }
+    .tl-item.highlight .tl-dot {
+      background: #ff7043;
+      box-shadow: 0 0 0 2px #ff7043;
+      width: 14px;
+      height: 14px;
+      left: -27px;
+    }
+    .tl-time {
+      font-size: 0.75rem;
+      font-weight: 700;
+      color: #00bcd4;
+      margin-bottom: 2px;
+      letter-spacing: 0.5px;
+    }
+    .tl-item.highlight .tl-time {
+      color: #ff7043;
+    }
+    .tl-title {
+      font-size: 0.9rem;
+      font-weight: 700;
+      color: #2d3748;
+      margin-bottom: 3px;
+    }
+    .tl-item.highlight .tl-title {
+      color: #e64a19;
+    }
+    .tl-desc {
+      font-size: 0.8rem;
+      color: #777;
+      line-height: 1.5;
+    }
+    .tl-item.highlight {
+      background: linear-gradient(135deg, #fff3e0 0%, #fce4ec 100%);
+      border-radius: 12px;
+      padding: 10px 12px;
+      margin-left: -12px;
+      margin-right: -4px;
+      border-left: 3px solid #ff7043;
+    }
+
+    /* ─── LEAFLET CUSTOM MARKERS ─── */
+    .map-marker {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      width: 36px;
+      height: 36px;
+      border-radius: 50%;
+      border: 3px solid #fff;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.25);
+      font-size: 16px;
+      cursor: pointer;
+    }
+
+    /* ─── RESPONSIVE ─── */
+    @media (max-width: 500px) {
+      .header h1 { font-size: 1.8rem; }
+      .crew-card { min-width: 80px; max-width: 100px; }
+      .avatar { width: 50px; height: 50px; font-size: 1.2rem; }
+      .tab-btn { font-size: 0.75rem; padding: 8px 4px; }
+      .timeline { padding-left: 26px; }
+      .tl-dot { left: -20px; }
+      .tl-item.highlight { margin-left: -8px; }
+    }
+  </style>
+</head>
+<body>
+
+<!-- HEADER -->
+<header class="header">
+  <h1>🌴 Fortaleza</h1>
+  <p class="subtitle">Viagem de Casamento · 婚礼之旅</p>
+  <div class="date-badge">04/04 – 04/06 / 2026</div>
+  <p class="hotel-note">Hotel Gran Marquise · L'Ô Restaurante</p>
+</header>
+
+<div class="container">
+
+  <!-- SECTION 1: CREW -->
+  <div class="section-title">👥 O Grupo · 我们六个</div>
+  <div class="card">
+    <div class="crew-grid" id="crewGrid"></div>
+  </div>
+
+  <!-- SECTION 2: MAP -->
+  <div class="section-title">📍 Mapa · 地图</div>
+  <div class="card" style="padding: 0; overflow: hidden;">
+    <div id="map"></div>
+  </div>
+
+  <!-- SECTION 3: ITINERARY TABS -->
+  <div class="section-title">📅 Roteiro · 行程</div>
+
+  <div class="tabs">
+    <button class="tab-btn active" onclick="switchTab(0)">🌴 Sábado 4/4<br><small>周六 · 婚礼日</small></button>
+    <button class="tab-btn" onclick="switchTab(1)">☀️ Domingo 4/5<br><small>周日 · 城市游</small></button>
+    <button class="tab-btn" onclick="switchTab(2)">✈️ Segunda 4/6<br><small>周一 · 返程日</small></button>
+  </div>
+
+  <!-- TAB 1 -->
+  <div class="tab-content active" id="tab0">
+    <div class="timeline">
+      <div class="tl-item">
+        <div class="tl-dot"></div>
+        <div class="tl-time">12:00</div>
+        <div class="tl-title">✈️ Chegada no Aeroporto / 抵达机场</div>
+        <div class="tl-desc">接机取行李，Pinto Martins 机场，一起出发去市区 🎒</div>
+      </div>
+      <div class="tl-item">
+        <div class="tl-dot"></div>
+        <div class="tl-time">13:30</div>
+        <div class="tl-title">🏨 Check-in Hotel Gran Marquise / 入住酒店</div>
+        <div class="tl-desc">海景豪华酒店，Beira Mar 黄金地段，先感受一下福塔雷萨的阳光 🌊</div>
+      </div>
+      <div class="tl-item">
+        <div class="tl-dot"></div>
+        <div class="tl-time">14:30</div>
+        <div class="tl-title">🍽️ Almoço no Coco Bambu / 午餐</div>
+        <div class="tl-desc">福塔雷萨人气海鲜餐厅，招牌大龙虾 🦞</div>
+      </div>
+      <div class="tl-item">
+        <div class="tl-dot"></div>
+        <div class="tl-time">15:30</div>
+        <div class="tl-title">👔 Preparação para o Casamento / 换装准备</div>
+        <div class="tl-desc">回酒店整理，换上最好看的礼服 ✨</div>
+      </div>
+      <div class="tl-item highlight">
+        <div class="tl-dot"></div>
+        <div class="tl-time">16:00 ⭐ 重点</div>
+        <div class="tl-title">💒 Casamento · L'Ô Restaurante / 婚礼！</div>
+        <div class="tl-desc">Av. Pessoa Anta, 217 — 见证幸福时刻，祝新人百年好合 💕</div>
+      </div>
+      <div class="tl-item">
+        <div class="tl-dot"></div>
+        <div class="tl-time">20:00</div>
+        <div class="tl-title">🥂 Jantar de Casamento / 婚礼晚宴</div>
+        <div class="tl-desc">觥筹交错，共庆美好 🎊</div>
+      </div>
+      <div class="tl-item">
+        <div class="tl-dot"></div>
+        <div class="tl-time">22:30</div>
+        <div class="tl-title">🌙 Retorno ao Hotel / 返回酒店</div>
+        <div class="tl-desc">美好的一天，好好休息 🌟</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- TAB 2 -->
+  <div class="tab-content" id="tab1">
+    <div class="timeline">
+      <div class="tl-item">
+        <div class="tl-dot"></div>
+        <div class="tl-time">08:00</div>
+        <div class="tl-title">🌅 Café da Manhã + Caminhada / 早餐+晨走</div>
+        <div class="tl-desc">酒店早餐，然后沿 Av. Beira Mar 海滨大道晨走，感受福塔雷萨清晨 🌊</div>
+      </div>
+      <div class="tl-item">
+        <div class="tl-dot"></div>
+        <div class="tl-time">09:30</div>
+        <div class="tl-title">🎨 Dragão do Mar / 文化中心</div>
+        <div class="tl-desc">福塔雷萨最著名地标，当代艺术 + 海洋历史博物馆，必打卡 🏛️</div>
+      </div>
+      <div class="tl-item">
+        <div class="tl-dot"></div>
+        <div class="tl-time">11:00</div>
+        <div class="tl-title">🌊 Praia de Iracema / 伊拉塞玛海滩</div>
+        <div class="tl-desc">福塔雷萨最具历史感的海滩，沙细水清，拍照绝佳 📸</div>
+      </div>
+      <div class="tl-item">
+        <div class="tl-dot"></div>
+        <div class="tl-time">12:30</div>
+        <div class="tl-title">🦞 Almoço no Estoril / 午餐</div>
+        <div class="tl-desc">海滩边网红餐厅，必点招牌炸虾 🍤</div>
+      </div>
+      <div class="tl-item">
+        <div class="tl-dot"></div>
+        <div class="tl-time">14:30</div>
+        <div class="tl-title">🏖️ Praia do Futuro / 未来海滩</div>
+        <div class="tl-desc">本地人最爱的海滩，椰子树 + 冰镇椰子水，尽情放松 🥥</div>
+      </div>
+      <div class="tl-item">
+        <div class="tl-dot"></div>
+        <div class="tl-time">17:00</div>
+        <div class="tl-title">🛍️ Shopping RioMar / 购物中心</div>
+        <div class="tl-desc">买纪念品，喝咖啡，吹吹空调 ☕</div>
+      </div>
+      <div class="tl-item highlight">
+        <div class="tl-dot"></div>
+        <div class="tl-time">18:30 ⭐ 必看</div>
+        <div class="tl-title">🌅 Pôr do Sol na Iracema / 伊拉塞玛看日落</div>
+        <div class="tl-desc">福塔雷萨最美日落，拍照留念 🧡</div>
+      </div>
+      <div class="tl-item">
+        <div class="tl-dot"></div>
+        <div class="tl-time">20:30</div>
+        <div class="tl-title">🍻 Barzinho na Iracema / 夜晚小酌</div>
+        <div class="tl-desc">海边酒吧，喝冰镇啤酒，聊一聊这两天 🌙</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- TAB 3 -->
+  <div class="tab-content" id="tab2">
+    <div class="timeline">
+      <div class="tl-item">
+        <div class="tl-dot"></div>
+        <div class="tl-time">08:00</div>
+        <div class="tl-title">☕ Último Café Beira Mar / 最后的海边早晨</div>
+        <div class="tl-desc">最后一次享受福塔雷萨的阳光，晨跑或海边咖啡 🌅</div>
+      </div>
+      <div class="tl-item">
+        <div class="tl-dot"></div>
+        <div class="tl-time">09:30</div>
+        <div class="tl-title">🧳 Check-out / 退房</div>
+        <div class="tl-desc">打包行李，告别 Gran Marquise 👋</div>
+      </div>
+      <div class="tl-item">
+        <div class="tl-dot"></div>
+        <div class="tl-time">10:30</div>
+        <div class="tl-title">🚗 Para o Aeroporto / 前往机场</div>
+        <div class="tl-desc">预留充足时间，不慌不忙 😌</div>
+      </div>
+      <div class="tl-item highlight">
+        <div class="tl-dot"></div>
+        <div class="tl-time">13:00+</div>
+        <div class="tl-title">🛫 Voo de Volta a São Paulo / 返回圣保罗</div>
+        <div class="tl-desc">带着满满的回忆，下次再见福塔雷萨！ 💙</div>
+      </div>
+    </div>
+  </div>
+
+</div><!-- /container -->
+
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<script>
+  // ─── CREW DATA ───
+  var crew = [
+    { initial: 'W', name: '文乐', color: '#ff7043', defaultStatus: '准备出发 ✈️' },
+    { initial: 'D', name: 'Daniel', color: '#42a5f5', defaultStatus: '期待婚礼 💒' },
+    { initial: 'F', name: 'Felix', color: '#66bb6a', defaultStatus: '太期待了！🌊' },
+    { initial: 'J', name: 'Jaylin', color: '#ab47bc', defaultStatus: '装备齐全 🧳' },
+    { initial: 'T', name: 'Tian', color: '#ffa726', defaultStatus: '已订好礼服 👔' },
+    { initial: 'A', name: 'Amigo', color: '#26c6da', defaultStatus: '一起嗨 🎉' }
+  ];
+
+  var STORAGE_KEY = 'fortaleza_v1_status';
+
+  function loadStatuses() {
+    try {
+      var raw = localStorage.getItem(STORAGE_KEY);
+      return raw ? JSON.parse(raw) : {};
+    } catch (e) {
+      return {};
+    }
+  }
+
+  function saveStatus(index, text) {
+    var statuses = loadStatuses();
+    statuses[index] = text;
+    try {
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(statuses));
+    } catch (e) {}
+  }
+
+  function renderCrew() {
+    var grid = document.getElementById('crewGrid');
+    var statuses = loadStatuses();
+    grid.innerHTML = '';
+    crew.forEach(function(person, i) {
+      var currentStatus = (statuses[i] !== undefined) ? statuses[i] : person.defaultStatus;
+
+      var card = document.createElement('div');
+      card.className = 'crew-card';
+
+      var avatar = document.createElement('div');
+      avatar.className = 'avatar';
+      avatar.style.background = person.color;
+      avatar.textContent = person.initial;
+
+      var nameEl = document.createElement('div');
+      nameEl.className = 'crew-name';
+      nameEl.textContent = person.name;
+
+      var statusWrap = document.createElement('div');
+      statusWrap.className = 'status-wrap';
+
+      var statusText = document.createElement('span');
+      statusText.className = 'status-text';
+      statusText.textContent = currentStatus;
+      statusText.title = '点击编辑';
+
+      statusText.addEventListener('click', function() {
+        var input = document.createElement('input');
+        input.type = 'text';
+        input.className = 'status-input';
+        input.value = statusText.textContent;
+        statusWrap.replaceChild(input, statusText);
+        input.focus();
+        input.select();
+
+        function commit() {
+          var newVal = input.value.trim() || person.defaultStatus;
+          statusText.textContent = newVal;
+          saveStatus(i, newVal);
+          statusWrap.replaceChild(statusText, input);
+        }
+
+        input.addEventListener('blur', commit);
+        input.addEventListener('keydown', function(e) {
+          if (e.key === 'Enter') { input.blur(); }
+          if (e.key === 'Escape') {
+            input.value = statusText.textContent;
+            statusWrap.replaceChild(statusText, input);
+          }
+        });
+      });
+
+      statusWrap.appendChild(statusText);
+      card.appendChild(avatar);
+      card.appendChild(nameEl);
+      card.appendChild(statusWrap);
+      grid.appendChild(card);
+    });
+  }
+
+  // ─── MAP ───
+  function initMap() {
+    var map = L.map('map', {
+      center: [-3.73, -38.52],
+      zoom: 13,
+      zoomControl: true,
+      scrollWheelZoom: false
+    });
+
+    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+      attribution: '© <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>',
+      maxZoom: 19
+    }).addTo(map);
+
+    var places = [
+      {
+        lat: -3.7253, lng: -38.5014,
+        emoji: '🏨', label: 'Hotel Gran Marquise',
+        sublabel: '我们的住宿',
+        color: '#42a5f5'
+      },
+      {
+        lat: -3.7194, lng: -38.5429,
+        emoji: '💒', label: "L'Ô Restaurante",
+        sublabel: '婚礼地点 16:00',
+        color: '#ef5350'
+      },
+      {
+        lat: -3.7187, lng: -38.5245,
+        emoji: '🌊', label: 'Praia de Iracema',
+        sublabel: '伊拉塞玛海滩',
+        color: '#26c6da'
+      },
+      {
+        lat: -3.7196, lng: -38.5253,
+        emoji: '🎨', label: 'Dragão do Mar',
+        sublabel: '文化中心',
+        color: '#ab47bc'
+      },
+      {
+        lat: -3.7428, lng: -38.4638,
+        emoji: '🏖️', label: 'Praia do Futuro',
+        sublabel: '未来海滩',
+        color: '#ffa726'
+      },
+      {
+        lat: -3.7762, lng: -38.5326,
+        emoji: '✈️', label: 'Aeroporto Pinto Martins',
+        sublabel: '机场',
+        color: '#90a4ae'
+      }
+    ];
+
+    places.forEach(function(p) {
+      var icon = L.divIcon({
+        className: '',
+        html: '<div class="map-marker" style="background:' + p.color + ';">' + p.emoji + '</div>',
+        iconSize: [36, 36],
+        iconAnchor: [18, 18],
+        popupAnchor: [0, -20]
+      });
+
+      var marker = L.marker([p.lat, p.lng], { icon: icon }).addTo(map);
+      marker.bindPopup(
+        '<div style="font-family:Poppins,sans-serif;min-width:120px;">' +
+        '<strong style="font-size:0.9rem;">' + p.emoji + ' ' + p.label + '</strong>' +
+        '<br><span style="font-size:0.78rem;color:#666;">' + p.sublabel + '</span>' +
+        '</div>',
+        { maxWidth: 200 }
+      );
+    });
+  }
+
+  // ─── TABS ───
+  function switchTab(index) {
+    var tabs = document.querySelectorAll('.tab-btn');
+    var contents = document.querySelectorAll('.tab-content');
+    tabs.forEach(function(t, i) {
+      t.classList.toggle('active', i === index);
+    });
+    contents.forEach(function(c, i) {
+      c.classList.toggle('active', i === index);
+    });
+  }
+
+  // ─── INIT ───
+  renderCrew();
+  initMap();
+</script>
+</body>
+</html>
