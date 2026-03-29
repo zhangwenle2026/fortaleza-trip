@@ -95,16 +95,39 @@ body{
 .hero-wave{position:absolute;bottom:0;left:0;right:0;opacity:0.25;}
 .hero-text{text-align:center;z-index:2;padding:0 20px;}
 .hero-label{
-  font-weight:300;font-size:11px;letter-spacing:3px;
-  color:rgba(255,255,255,0.85);text-transform:uppercase;margin-bottom:6px;
+  font-size:0.75rem;
+  letter-spacing:0.35em;
+  color:rgba(255,255,255,0.92);
+  text-shadow:0 1px 8px rgba(255,160,50,0.7);
+  font-weight:600;
+  margin-bottom:6px;
 }
 .hero-title{
   font-family:'Playfair Display',serif;
-  font-style:italic;font-size:2.2rem;color:#fff;
-  text-shadow:0 2px 20px rgba(0,0,0,0.2);line-height:1.2;
+  font-style:italic;
+  font-size:3rem;
+  font-weight:900;
+  background: linear-gradient(135deg, #fff9e6 0%, #ffd966 35%, #fff 55%, #ffb347 80%, #fff5cc 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  filter: drop-shadow(0 0 18px rgba(255,200,80,0.7)) drop-shadow(0 3px 8px rgba(0,0,0,0.45));
+  line-height:1.15;
+  letter-spacing:0.04em;
+  animation: titleGlow 2.5s ease-in-out infinite alternate;
+}
+@keyframes titleGlow {
+  from { filter: drop-shadow(0 0 12px rgba(255,200,80,0.6)) drop-shadow(0 3px 8px rgba(0,0,0,0.4)); }
+  to   { filter: drop-shadow(0 0 28px rgba(255,220,100,0.95)) drop-shadow(0 3px 12px rgba(0,0,0,0.5)); }
 }
 .hero-subtitle{
-  font-weight:300;color:rgba(255,255,255,0.9);font-size:1rem;margin-top:4px;
+  font-weight:400;
+  color:rgba(255,255,255,0.95);
+  font-size:1.1rem;
+  margin-top:6px;
+  letter-spacing:0.18em;
+  text-shadow: 0 1px 12px rgba(255,180,60,0.6), 0 2px 4px rgba(0,0,0,0.4);
+  font-style:italic;
 }
 .hero-badge{
   margin-top:12px;display:inline-block;
