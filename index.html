@@ -325,6 +325,42 @@ body{
       position: relative;
       z-index: 1;
     }
+  
+    /* ─── SPOT PHOTO UPLOAD ─── */
+    .spot-header {
+      cursor: pointer;
+    }
+    .spot-upload-hint {
+      position: absolute;
+      inset: 0;
+      background: rgba(0,0,0,0);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      border-radius: 0;
+      transition: background 0.2s;
+      z-index: 2;
+    }
+    .spot-header:hover .spot-upload-hint {
+      background: rgba(0,0,0,0.28);
+    }
+    .spot-upload-hint span {
+      opacity: 0;
+      color: #fff;
+      font-size: 22px;
+      transition: opacity 0.2s;
+    }
+    .spot-header:hover .spot-upload-hint span {
+      opacity: 1;
+    }
+    .spot-header.has-photo {
+      background-size: cover !important;
+      background-position: center !important;
+    }
+    .spot-header.has-photo .spot-emoji {
+      display: none;
+    }
+
   </style>
 </head>
 <body>
@@ -752,6 +788,7 @@ body{
   <!-- Spot 1: Praia de Iracema -->
   <div class="spot-card" data-cats="sunset beach wedding">
     <div class="spot-header" style="background:linear-gradient(135deg,#5bc4d6 0%,#74d7e8 100%);">
+      <div class="spot-upload-hint"><span class="spot-emoji">📷 换图</span></div>
       <span>🌊</span><span>🏖️</span>
       <div class="wedding-ribbon">💒 婚礼同款</div>
     </div>
@@ -769,6 +806,7 @@ body{
   <!-- Spot 2: Dragao do Mar -->
   <div class="spot-card" data-cats="culture">
     <div class="spot-header" style="background:linear-gradient(135deg,#9b8ea0 0%,#c4b5cc 100%);">
+      <div class="spot-upload-hint"><span class="spot-emoji">📷 换图</span></div>
       <span>🎨</span><span>🏛️</span>
     </div>
     <div class="spot-body">
@@ -785,6 +823,7 @@ body{
   <!-- Spot 3: Praia do Futuro -->
   <div class="spot-card" data-cats="beach">
     <div class="spot-header" style="background:linear-gradient(135deg,#f4a261 0%,#f4845f 100%);">
+      <div class="spot-upload-hint"><span class="spot-emoji">📷 换图</span></div>
       <span>🏖️</span><span>🥥</span>
     </div>
     <div class="spot-body">
@@ -801,6 +840,7 @@ body{
   <!-- Spot 4: Beira Mar -->
   <div class="spot-card" data-cats="sunset beach wedding">
     <div class="spot-header" style="background:linear-gradient(135deg,#5bc4d6 0%,#f4845f 100%);">
+      <div class="spot-upload-hint"><span class="spot-emoji">📷 换图</span></div>
       <span>🌅</span><span>🚶</span>
       <div class="wedding-ribbon">💒 婚礼同款</div>
     </div>
@@ -818,6 +858,7 @@ body{
   <!-- Spot 5: Mercado Central -->
   <div class="spot-card" data-cats="shop">
     <div class="spot-header" style="background:linear-gradient(135deg,#ffd166 0%,#f4a261 100%);">
+      <div class="spot-upload-hint"><span class="spot-emoji">📷 换图</span></div>
       <span>🛍️</span><span>🌺</span>
     </div>
     <div class="spot-body">
@@ -834,6 +875,7 @@ body{
   <!-- Spot 6: Sunset Point -->
   <div class="spot-card" data-cats="sunset wedding bar">
     <div class="spot-header" style="background:linear-gradient(135deg,#f8b4c8 0%,#f4845f 100%);">
+      <div class="spot-upload-hint"><span class="spot-emoji">📷 换图</span></div>
       <span>🌅</span><span>💕</span>
       <div class="wedding-ribbon">💒 婚礼同款</div>
     </div>
@@ -1045,5 +1087,66 @@ window.addEventListener('load', function() {
   });
 });
 </script>
+
+<script>
+(function() {
+  var SPOT_STORAGE_KEY = 'fortaleza_spot_photos';
+
+  function loadSpotPhotos() {
+    try { return JSON.parse(localStorage.getItem(SPOT_STORAGE_KEY) || '{}'); } catch(e) { return {}; }
+  }
+  function saveSpotPhoto(idx, dataUrl) {
+    var photos = loadSpotPhotos();
+    photos[idx] = dataUrl;
+    try { localStorage.setItem(SPOT_STORAGE_KEY, JSON.stringify(photos)); } catch(e) {}
+  }
+
+  function initSpotUpload() {
+    var headers = document.querySelectorAll('.spot-header');
+    var photos = loadSpotPhotos();
+
+    headers.forEach(function(header, idx) {
+      // 恢复已保存的图片
+      if (photos[idx]) {
+        header.style.backgroundImage = 'url(' + photos[idx] + ')';
+        header.classList.add('has-photo');
+      }
+
+      // 创建隐藏 input
+      var input = document.createElement('input');
+      input.type = 'file';
+      input.accept = 'image/*';
+      input.style.display = 'none';
+      document.body.appendChild(input);
+
+      header.addEventListener('click', function(e) {
+        input.click();
+      });
+
+      input.addEventListener('change', function() {
+        var file = input.files[0];
+        if (!file) return;
+        var reader = new FileReader();
+        reader.onload = function(e) {
+          var src = e.target.result;
+          header.style.backgroundImage = 'url(' + src + ')';
+          header.classList.add('has-photo');
+          saveSpotPhoto(idx, src);
+        };
+        reader.readAsDataURL(file);
+        input.value = '';
+      });
+    });
+  }
+
+  // DOM ready 后初始化
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', initSpotUpload);
+  } else {
+    initSpotUpload();
+  }
+})();
+</script>
+
 </body>
 </html>
